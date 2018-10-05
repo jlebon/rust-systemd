@@ -5,6 +5,7 @@ extern crate log;
 
 use std::path::Path;
 use systemd::journal;
+use systemd::id128;
 
 // Some systems don't have a running journal, which causes our tests to fail currently
 //
@@ -55,6 +56,11 @@ fn ts() {
     log!(log::Level::Info, "rust-systemd test_seek entry");
     assert!(j.seek(journal::JournalSeek::Head).is_ok());
     let _s = j.timestamp().unwrap();
+    assert!(j.seek(journal::JournalSeek::Tail).is_ok());
+    let (u, entry_boot_id) = j.monotonic_timestamp().unwrap();
+    assert!(u > 0);
+    let boot_id = id128::Id128::from_boot().unwrap();
+    assert!(boot_id == entry_boot_id);
 }
 
 

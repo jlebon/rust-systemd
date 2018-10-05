@@ -4,6 +4,7 @@ use std::{io, ptr, result, fmt};
 use std::collections::BTreeMap;
 use std::ffi::CString;
 use std::io::ErrorKind::InvalidData;
+use std::mem::uninitialized;
 use std::os::raw::c_void;
 use std::u64;
 use ffi::array_to_iovecs;
@@ -330,6 +331,18 @@ impl Journal {
         let mut timestamp_us: u64 = 0;
         sd_try!(ffi::sd_journal_get_realtime_usec(self.j, &mut timestamp_us));
         Ok(system_time_from_realtime_usec(timestamp_us))
+    }
+
+    /// Returns monotonic timestamp and boot ID at which current journal entry is recorded.
+    pub fn monotonic_timestamp(&self) -> Result<(u64, Id128)> {
+        let mut monotonic_timestamp_us: u64 = 0;
+        let mut id: sd_id128_t = unsafe { uninitialized() };
+        sd_try!(ffi::sd_journal_get_monotonic_usec(
+            self.j,
+            &mut monotonic_timestamp_us,
+            &mut id,
+        ));
+        Ok((monotonic_timestamp_us, Id128::from(id)))
     }
 
     /// Adds a match by which to filter the entries of the journal.

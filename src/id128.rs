@@ -46,3 +46,15 @@ impl Id128 {
         &self.inner.bytes
     }
 }
+
+impl From<ffi::id128::sd_id128_t> for Id128 {
+    fn from(id: ffi::id128::sd_id128_t) -> Self {
+        Id128 { inner: id }
+    }
+}
+
+impl PartialEq for Id128 {
+    fn eq(&self, other: &Id128) -> bool {
+        self.inner.bytes == other.inner.bytes
+    }
+}
